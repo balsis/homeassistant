@@ -14,4 +14,4 @@ hall:
      - service: notify.telegram_artur
        data:
              message: | 
-                 🚪 Входная дверь закрыта {{as_timestamp(now()) | timestamp_custom('%H:%M:%S',true,0) }}.
+                 🚪 Входная дверь закрыта  {{as_timestamp(now()) | timestamp_custom('%H:%M:%S',true,0) }}.
