@@ -1,0 +1,17 @@
+hall: 
+
+ automation:
+
+  - alias: main_door_closed
+    id: main_door_closed
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.0x00158d00072b958d_contact
+        from: 'on'
+        to: 'off'
+    action:          
+     - service: notify.telegram_artur
+       data:
+             message: | 
+                 🚪 Входная дверь закрыта {{as_timestamp(now()) | timestamp_custom('%H:%M:%S',true,0) }}.

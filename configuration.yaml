@@ -1,0 +1,101 @@
+homeassistant:
+ name: Svetlanovskiy
+ latitude: !secret latitude 
+ longitude: !secret longitude
+ elevation: 30
+ unit_system: metric
+ time_zone: Europe/Moscow
+ packages: !include_dir_merge_named includes/packages
+ customize: !include customize.yaml
+ allowlist_external_dirs:
+ - /config
+frontend:
+  themes: !include_dir_merge_named themes
+  extra_module_url:
+    - /hacsfiles/hass-hue-icons/hass-hue-icons.js  
+wake_on_lan: 
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - !secret ip1 
+    - !secret ip2 
+    - !secret ip3 
+    - !secret ip4 
+    
+
+hacs:
+  token: !secret token 
+  appdaemon: true
+  #python_script: true
+  #theme: true
+
+lovelace:
+
+telegram_bot:
+  - platform: polling
+    api_key: !secret api_key  #API ключ полученный в @botfather
+    allowed_chat_ids:
+      - !secret tg_artur
+      - !secret tg_maria   
+      - !secret tg_chat 
+notify:
+  - name: telegram_artur
+    platform: telegram
+    chat_id: !secret tg_artur
+  - name: telegram_maria
+    platform: telegram
+    chat_id: !secret tg_maria 
+  - name: telegram_chat
+    platform: telegram
+    chat_id: !secret tg_chat    
+
+
+
+
+
+
+yandex_station:
+  include:
+  - Телевизор
+  - Акустика
+  - Самсунг
+  - Кондиционер
+  media_source:
+    - title: Произнеси текст  # обязательное поле
+      media_content_type: text  # обязательное поле
+      thumbnail: https://brands.home-assistant.io/_/tts/icon.png
+    - title: Выполни команду
+      media_content_type: command
+      thumbnail: https://brands.home-assistant.io/_/automation/icon.png
+    - title: Включи любимое
+      media_content_id: Включи моё любимое вперемешку
+      media_content_type: command
+    - title: Произнеси шепотом 
+      template: '<speaker is_whisper="true">{{ message }}'
+      media_content_type: dialog
+      extra:
+        volume_level: 0.2
+    - title: Статус эквалайзера
+      template: 'Эквалайзер установлен на {{ states("select.yandex_station_equalizer") }}'
+      media_content_type: text
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+# Text to speech
+#tts:
+#  - platform: google_translate
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+recorder: !include includes/recorder.yaml 
+#device_tracker: !include includes/device_tracker.yaml
+
+
+
+
+
+
+
+
+

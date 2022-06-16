@@ -1,0 +1,69 @@
+battery:
+ automation:
+    - alias: mi_a2_battery_low
+      initial_state: 'true'
+      trigger:
+      -  platform: numeric_state
+         entity_id: sensor.mi_a2_aosp_battery_level
+         below: 10
+      action:          
+         - service: notify.telegram_artur
+           data:
+              message: | 
+                     {{"\U0001f50b"}} Телефон Mi A2 разряжен. Поставьте на зарядку.              
+         - service: yandex_station.send_command 
+           data:
+            entity_id: media_player.yandex_station
+            command: sendText
+            text: Повтори за мной "Телефон Ми А 2 разряжен. Артурчик, поставь на зарядку, пожалуйста."
+            
+    - alias: realme_battery_low
+      initial_state: 'true'
+      trigger:
+      -  platform: numeric_state
+         entity_id: sensor.realme_6_battery_level
+         below: 10
+      action:          
+         - service: notify.telegram_maria
+           data:
+              message: | 
+                     {{"\U0001f50b"}} Телефон Realme разряжен. Маруся, срочно ставь на зарядку.              
+         - service: yandex_station.send_command 
+           data:
+            entity_id: media_player.yandex_station
+            command: sendText
+            text: Повтори за мной "Телефон Риалми разряжен. Маруся, срочно ставь на зарядку."        
+            
+    - alias: mi_a2_battery_full
+      initial_state: 'true'
+      trigger:
+      -  platform: numeric_state
+         entity_id: sensor.mi_a2_aosp_battery_level
+         above: 99
+      action:          
+         - service: notify.telegram_artur
+           data:
+              message: | 
+                     {{"\U0001f50b"}} Телефон Mi A2 полностью заряжен.              
+         - service: yandex_station.send_command 
+           data:
+            entity_id: media_player.yandex_station
+            command: sendText
+            text: Повтори за мной "Телефон Ми А 2 полностью заряжен. Артурчик, можно снимать с зарядки."
+            
+    - alias: realme_battery_full
+      initial_state: 'true'
+      trigger:
+      -  platform: numeric_state
+         entity_id: sensor.realme_6_battery_level
+         above: 99
+      action:          
+         - service: notify.telegram_maria
+           data:
+              message: | 
+                     {{"\U0001f50b"}} Телефон Realme полностью заряжен.              
+         - service: yandex_station.send_command 
+           data:
+            entity_id: media_player.yandex_station
+            command: sendText
+            text: Повтори за мной "Телефон Риалми полностью заряжен. Маруся, можно снимать с зарядки."

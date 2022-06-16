@@ -1,0 +1,148 @@
+presense:
+
+ sensor:
+  - platform: yandex_transport
+    stop_id: stop__10074551
+ 
+ proximity: 
+ 
+   artur_home: 
+    zone: home
+    devices:
+      - person.artur
+    tolerance: 5
+    unit_of_measurement: m
+   maria_home: 
+    zone: home
+    devices:
+      - person.maria
+    tolerance: 5
+    unit_of_measurement: m    
+   home:
+    zone: home
+    devices:
+      - person.artur
+      - person.maria
+    tolerance: 5
+    unit_of_measurement: m
+
+ template:
+   - binary_sensor: 
+      - name: people_home
+        device_class: presence
+        state: >-
+              {{ is_state('person.artur','home') or 
+              is_state('person.maria','home')}}
+         
+ automation:                 
+ 
+    - id: '1646459939302'
+      alias: went to work
+      description: ''
+      trigger:
+      - platform: state
+        entity_id: person.artur
+        from: home
+      condition:
+      - condition: time
+        after: 07:45
+        before: 08:15
+        weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+      action:
+      - type: turn_off
+        device_id: fcc0264e0b8b5bb192f1b21b7c08c827
+        entity_id: light.desk_lamp
+        domain: light
+      - type: turn_off
+        device_id: 6f8d7baaf39f83a2a36d0c1133343983
+        entity_id: switch.bathroom_switch_l1
+        domain: switch
+      - type: turn_off
+        device_id: 6f8d7baaf39f83a2a36d0c1133343983
+        entity_id: switch.bathroom_switch_l2
+        domain: switch
+      - type: turn_off
+        device_id: e6631f938967dc078c19d5e4e5e3754a
+        entity_id: switch.toilet_switch_l1
+        domain: switch
+      - type: turn_off
+        device_id: e6631f938967dc078c19d5e4e5e3754a
+        entity_id: switch.toilet_switch_l2
+        domain: switch
+      - type: turn_off
+        device_id: 086a49338ab237e4a3f1b85a8b1d3620
+        entity_id: switch.kitchen_switch_left
+        domain: switch
+      - type: turn_off
+        device_id: 086a49338ab237e4a3f1b85a8b1d3620
+        entity_id: switch.kitchen_switch_center
+        domain: switch
+      - service: notify.telegram_artur
+        data:
+          message: | 
+                 {{"\U0001f3e1"}} Артур потопал на работу. Свет в квартире выключен. 
+
+    - id: '1649576607426'
+      alias: Marusya leaves Vorontsovskiy
+      description: ''
+      trigger:
+      - platform: zone
+        entity_id: person.maria
+        zone: zone.murino
+        event: leave
+      condition: []
+      action:
+      - service: notify.telegram_artur
+        data:
+          message: Маруся выехала
+      mode: single
+    - id: '1649599306884'
+      alias: Marusya arrives Svetlanovskiy
+      description: ''
+      trigger:
+      - platform: zone
+        entity_id: person.maria
+        zone: zone.home
+        event: enter
+      condition: []
+      action:
+      - service: notify.telegram_artur
+        data:
+          message: Маруся приехала домой
+      mode: single
+    - id: '1650385510873'
+      alias: Artur arrives Svetlanovskiy
+      description: ''
+      trigger:
+      - platform: zone
+        entity_id: person.artur
+        zone: zone.home
+        event: enter
+      condition: []
+      action:
+      - service: notify.telegram_maria
+        data:
+          message: Артур приближается к дому
+      mode: single
+
+
+    - alias: not_home_scene_activate
+      initial_state: 'true'
+      trigger:
+      - platform: state
+        entity_id: 
+           - binary_sensor.people_home 
+        from: "on"
+        to: "off"
+      action:
+         - service: scene.turn_on
+           entity_id: scene.not_home
+         - service: notify.telegram_chat
+           data:
+              message: | 
+                     {{"\U0001f3e1"}} Все ушли из дома. Оборудование отключено.  

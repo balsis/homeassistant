@@ -1,0 +1,71 @@
+sleep_timer:
+    input_number:
+      sleep:
+        name: sleep
+        initial: 60
+        min: 0
+        max: 120
+        step: 1
+        mode: slider
+    
+    input_boolean:
+      sleep:
+        name: sleep
+        initial: off
+    
+    timer:
+      sleep:
+        name: sleep
+    
+    automation:
+      - alias: timer start
+        trigger:
+          platform: state
+          entity_id: input_boolean.sleep
+          to: 'on'
+        action:
+          service: timer.start
+          entity_id: timer.sleep
+          data_template:
+            duration: "{{ states('input_number.sleep') | int * 60 }}"
+    
+      - alias: timer cancel
+        trigger:
+          platform: state
+          entity_id: input_boolean.sleep
+          to: 'off'
+        action:
+          service: timer.cancel
+          entity_id: timer.sleep
+    
+      - alias: timer stop
+        trigger:
+          platform: event
+          event_type: timer.finished
+          event_data:
+            entity_id: timer.sleep
+        action:
+        - service: input_boolean.turn_off
+          data:
+            entity_id: input_boolean.sleep
+        # - service: switch.turn_off
+        #   entity_id: switch.hisense_tv
+        - service: switch.turn_off
+          entity_id: switch.room_switch_left           
+        - service: switch.turn_off
+          entity_id: light.desk_lamp  
+        - service: media_player.turn_off
+          target:
+             entity_id: media_player.televizor          
+          
+          
+                # entity_id: switch.bathroom_switch_l1
+                # entity_id: switch.bathroom_switch_l2
+                # entity_id: switch.kitchen_switch_center          
+                # entity_id: switch.kitchen_switch_right         
+                # entity_id: switch.kitchen_switch_left 
+                # entity_id: switch.room_switch_left 
+                # entity_id: switch.room_switch_center 
+                # entity_id: switch.room_switch_left 
+                # entity_id: switch.toilet_switch_l2
+             

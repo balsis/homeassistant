@@ -1,0 +1,231 @@
+bathroom: 
+
+    timer:
+    
+        vent_30:
+          name: Вентилятор в ванной отключится через - 
+          duration: '00:30:00'
+        vent_60:
+          name: Вентилятор в ванной отключится через - 
+          duration: '00:60:00'
+
+    template:
+      - binary_sensor:
+
+          - name: bathroom_light
+            state: >
+              {{ is_state('binary_sensor.0x00158d0003cc3e29_motion', 'off')  
+                 and is_state('switch.bathroom_switch_l1', 'on')
+              }}
+            delay_on: 00:03:00
+
+          - name: washing machine
+            delay_off:
+             seconds: 5
+            state: "{{ states('sensor.washing_machine_power')|float(0) > 5 }}"
+
+    automation:
+    
+      - id: light_moving_control_bath
+        alias: light_moving_control_bath
+        initial_state: true
+        trigger:
+    # Датчик движения
+        - platform: state
+          entity_id: binary_sensor.0x00158d0003cc3e29_motion
+        - platform: state
+          entity_id: binary_sensor.0x00158d0003925e4d_contact         
+          to: 'on'
+    # Сенсор шаблона
+        - platform: state
+          entity_id: binary_sensor.bathroom_light
+        action:
+            - choose:
+              - conditions:
+# дверь открыта, движения пока нет
+                  - condition: state
+                    entity_id: binary_sensor.0x00158d0003925e4d_contact
+                    state: 'on'
+                  - condition: state
+                    entity_id: binary_sensor.0x00158d0003cc3e29_motion
+                    state: 'off'                    
+                  - condition: state
+                    entity_id: switch.bathroom_switch_l1
+                    state: 'off'
+                sequence:
+                  - service: switch.turn_on
+                    entity_id:
+                      - switch.bathroom_switch_l1
+# движение есть
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.0x00158d0003cc3e29_motion
+                    state: 'on'
+                  - condition: state
+                    entity_id: switch.bathroom_switch_l1
+                    state: 'off'
+                sequence:
+                  - service: switch.turn_on
+                    entity_id:
+                      - switch.bathroom_switch_l1
+# нет движения 3 минуты и свет включен
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.bathroom_light
+                    state: 'on'
+                sequence:
+                  - service: switch.turn_off
+                    entity_id:
+                      - switch.bathroom_switch_l1 
+                      - switch.bathroom_switch_l2
+
+
+      - id: Ванная, включение вентиляции_30
+        alias: bath_vent_on
+        initial_state: true
+        trigger:
+      ## Влажность более 60 процентов
+        - platform: numeric_state
+          entity_id: sensor.a4c138dd44bf_humidity
+          above: 60
+      ## кнопка
+        # - platform: state
+        #   entity_id: sensor.0x00158d000238a140_action
+        #   to: 'single_right'
+        condition:
+        # - condition: state
+        #   entity_id: switch.control_mode
+        #   state: 'on'  
+        - condition: state
+          entity_id: switch.toilet_switch_l1
+          state: 'off'
+        action:
+        - service: switch.turn_on
+          entity_id: switch.toilet_switch_l1
+
+      - id: Ванная, включение вентиляции_60
+        alias: bath_vent_on
+        initial_state: true
+        trigger:
+      ## Влажность более 70 процентов
+        - platform: numeric_state
+          entity_id: sensor.a4c138dd44bf_humidity
+          above: 75
+      ## кнопка
+        # - platform: state
+        #   entity_id: sensor.0x00158d000238a140_action
+        #   to: 'single_right'
+        condition:
+        # - condition: state
+        #   entity_id: switch.control_mode
+        #   state: 'on'  
+        - condition: state
+          entity_id: switch.toilet_switch_l1
+          state: 'off'
+        action:
+        - service: switch.turn_on
+          entity_id: switch.toilet_switch_l1
+        - service: switch.turn_on
+          entity_id: switch.towel_dryer
+
+
+      - id: Ванная, выключение вентиляции
+        alias: bt_vent_off
+        initial_state: true
+        trigger:    
+      ## Завершение таймера
+        - platform: event
+          event_type: timer.finished
+          event_data:
+            entity_id: timer.vent_30
+        - platform: event
+          event_type: timer.finished
+          event_data:
+            entity_id: timer.vent_60            
+      ## Кнопка
+        # - platform: state
+        #   entity_id: sensor.0x00158d000238a140_action
+        #   to: 'single_right'
+        condition:
+        # - condition: state
+        #   entity_id: switch.control_mode
+        #   state: 'on'  
+        - condition: state
+          entity_id: switch.toilet_switch_l1
+          state: 'on'
+        action:
+        - service: switch.turn_off
+          entity_id: switch.toilet_switch_l1
+        - service: switch.turn_off
+          entity_id: switch.towel_dryer
+
+      - id: Ванная, включение таймера вентиляции
+        alias: bt_vent_timer_on
+        initial_state: true
+        trigger:       
+        - platform: state
+          entity_id: switch.toilet_switch_l1
+          to: 'on'
+        action:
+        - service: timer.start
+          entity_id: timer.vent_30
+
+      - id: Ванная, выключение таймера вентиляции
+        alias: bt_vent_timer_off
+        initial_state: true
+        trigger:       
+        - platform: state
+          entity_id: switch.toilet_switch_l1
+          to: 'off'
+        action:
+        - service: timer.cancel
+          entity_id: timer.vent_30
+
+
+      - id: bathroom_occupancy_turn_on
+        alias: bathroom_occupancy_turn_on
+        trigger:
+        - platform: state
+          entity_id: binary_sensor.0x00158d0003cc3e29_motion
+        condition:
+        - condition: state
+          entity_id: input_boolean.bath_occupancy
+          state: 'off'
+        - condition: state
+          entity_id: binary_sensor.0x00158d0003925e4d_contact
+          state: 'off'
+          for:
+            seconds: 3
+        action:
+        - service: input_boolean.turn_on
+          entity_id: input_boolean.bath_occupancy
+        - service: light.turn_on
+          entity_id: light.mi_control_hub_light
+          data:
+            rgb_color:
+            - 196
+            - 8
+            - 8
+            brightness_pct: 100
+        initial_state: true
+
+
+      - id: bathroom_occupancy_turn_off
+        alias: bathroom_occupancy_turn_off
+        trigger:
+        - platform: state
+          entity_id: binary_sensor.0x00158d0003cc3e29_motion
+        condition:
+        - condition: state
+          entity_id: input_boolean.bath_occupancy
+          state: 'on'
+        action:
+        - service: input_boolean.turn_on
+          entity_id: input_boolean.bath_occupancy
+        - service: light.turn_off
+          entity_id: light.mi_control_hub_light
+        initial_state: true
+    
+
+        
+               

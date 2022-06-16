@@ -1,0 +1,92 @@
+toilet:
+
+    template:
+     
+      - binary_sensor:
+
+          - name: toilet_light
+            state: >
+              {{ is_state('binary_sensor.0x00158d0003cc3edd_motion', 'off')  
+                 and is_state('switch.toilet_switch_l2', 'on')
+              }}
+            delay_on: 00:03:00
+
+    automation:
+    
+      - id: light_moving_control_toilet
+        alias: light_moving_control_toilet
+        initial_state: true
+        trigger:
+    # Датчик движения
+        - platform: state
+          entity_id: binary_sensor.0x00158d0003cc3edd_motion
+    # Сенсор шаблона
+        - platform: state
+          entity_id: binary_sensor.toilet_light
+        action:
+            - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.0x00158d0003cc3edd_motion
+                    state: 'on'
+                  - condition: state
+                    entity_id: switch.toilet_switch_l2
+                    state: 'off'
+                sequence:
+                  - service: switch.turn_on
+                    entity_id:
+                      - switch.toilet_switch_l2
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.toilet_light
+                    state: 'on'
+                sequence:
+                  - service: switch.turn_off
+                    entity_id:
+                      - switch.toilet_switch_l2  
+
+      - id: toilet_occupancy_turn_on
+        alias: toilet_occupancy_turn_on
+        trigger:
+        - platform: state
+          entity_id: binary_sensor.0x00158d0003cc3edd_motion
+        condition:
+        - condition: state
+          entity_id: input_boolean.toilet_occupancy
+          state: 'off'
+        - condition: state
+          entity_id: binary_sensor.0x00158d000397542f_contact
+          state: 'off'
+          for:
+            seconds: 3
+        action:
+        - service: input_boolean.turn_on
+          entity_id: input_boolean.toilet_occupancy
+        - service: light.turn_on
+          entity_id: light.mi_control_hub_light
+          data:
+            rgb_color:
+            - 196
+            - 8
+            - 8
+            brightness_pct: 100
+        initial_state: true
+
+
+      - id: toilet_occupancy_turn_off
+        alias: toilet_occupancy_turn_off
+        trigger:
+        - platform: state
+          entity_id: binary_sensor.0x00158d0003cc3edd_motion
+        condition:
+        - condition: state
+          entity_id: input_boolean.toilet_occupancy
+          state: 'on'
+        action:
+        - service: input_boolean.turn_on
+          entity_id: input_boolean.toilet_occupancy
+        - service: light.turn_off
+          entity_id: light.mi_control_hub_light
+        initial_state: true
+
+                      

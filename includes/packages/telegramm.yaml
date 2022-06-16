@@ -1,0 +1,46 @@
+telegramm:          
+
+    automation:   
+
+    - alias: yandex_telegram_text
+      trigger:
+      - platform: event
+        event_type: telegram_text
+      action:
+        service: media_player.play_media
+        entity_id: media_player.yandex_station  # замените на вашу станцию
+        data:
+          media_content_id: "{{ trigger.event.data.text }}"
+          media_content_type: "question:{{ trigger.event.data.chat_id }}"
+    - alias: yandex_telegramm_answer
+      trigger:
+        platform: event
+        event_type: yandex_station_response
+      action:
+        service: telegram_bot.send_message
+        data:
+          target: "{{ trigger.event.data.request_id }}"
+          message: "{{ trigger.event.data.text }}"
+
+ 
+
+    - alias: start_message
+      initial_state: true
+      trigger:   
+         - platform: homeassistant
+           event: start          
+      action:          
+         - service: notify.telegram_artur
+           data:
+                 message: | 
+                     {{"\U0001F4AC"}} Основной сервер 
+                     {{"\U0001F567"}} Зафиксирован запуск в {{ states('sensor.time_date') }} 
+
+
+            
+            
+            
+            
+            
+            
+            

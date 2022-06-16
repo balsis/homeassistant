@@ -1,0 +1,217 @@
+edifier: 
+ input_number:
+  edifier_volume:
+    name: Volume
+    initial: 10
+    min: 0
+    max: 20
+    step: 1
+    mode: slider 
+
+#   edifier_vol:
+#     name: Volume
+#     initial: 0
+#     min: -20
+#     max: 20
+#     step: 1
+#     mode: slider 
+
+ switch:
+  - platform: template
+    switches:
+       edifier_input:
+        friendly_name: "Edifier input"
+        
+        turn_off:
+          service: script.turn_on
+          data:
+            entity_id: script.edifier_analog
+        turn_on:
+          service: script.turn_on
+          data:
+            entity_id: script.edifier_optical 
+
+ sensor:
+  - platform: template
+    sensors:
+      edifier_input:
+        friendly_name: "Вход акустики"
+        value_template: >-
+          {% if is_state('switch.hisense_tv', 'on') %}
+            optical input
+          {% else %}
+            analog input
+          {% endif %}
+ script:
+  #Проброс команд из яндекс пульта
+  edifier_volume_up:
+    alias: Сделай громче
+    sequence:
+    - service: remote.send_command
+      entity_id: remote.yandex_station  
+      data:
+        device: 32756745
+        command: Громче  # имя кнопки в интерфейсе
+        num_repeats: 10  # (опционально) количество повторов
+        delay_secs: 0.4  # (опционально) пауза между повторами в секундах
+        
+  edifier_volume_down:
+    alias: Сделай тише
+    sequence:
+    - service: remote.send_command
+      entity_id: remote.yandex_station  # поменяйте на ваше устройство
+      data:
+        device: 32756745
+        command: Тише  # имя кнопки в интерфейсе
+        num_repeats: 10  # (опционально) количество повторов
+        delay_secs: 0.4  # (опционально) пауза между повторами в секундах
+        
+  edifier_analog:
+    alias: Аналог
+    sequence:
+    - service: remote.send_command
+      entity_id: remote.yandex_station  # поменяйте на ваше устройство
+      data:
+        device: 32756745
+        command: Аналог  # имя кнопки в интерфейсе
+
+  edifier_optical:
+    alias: Оптика 
+    sequence:
+    - service: remote.send_command
+      entity_id: remote.yandex_station  # поменяйте на ваше устройство
+      data:
+        device: 32756745
+        command: Оптика  # имя кнопки в интерфейсе
+
+  edifier_mute:
+    alias: Mute
+    sequence:
+    - service: remote.send_command
+      entity_id: remote.yandex_station  # поменяйте на ваше устройство
+      data:
+        device: 32756745
+        command: Мьют # имя кнопки в интерфейсе 
+ # Изменение громкости на 1 позицию 
+  edifier_volume_up_step:
+    alias: Громкость +1
+    sequence:
+    - service: remote.send_command
+      entity_id: remote.yandex_station  # поменяйте на ваше устройство
+      data:
+        device: 32756745
+        command: Громче  # имя кнопки в интерфейсе
+        num_repeats: 1  # (опционально) количество повторов
+        delay_secs: 0.4  # (опционально) пауза между повторами в секундах
+        
+  edifier_volume_down_step:
+    alias: Громкость -1
+    sequence:
+    - service: remote.send_command
+      entity_id: remote.yandex_station  # поменяйте на ваше устройство
+      data:
+        device: 32756745
+        command: Тише  # имя кнопки в интерфейсе
+        num_repeats: 1  # (опционально) количество повторов
+        delay_secs: 0.4  # (опционально) пауза между повторами в секундах
+        
+  # На сколько пунктов убавить громкость 
+  volume_down_input:
+    sequence:
+      - alias: volume_down_input
+        repeat:
+          until:
+            - condition: template
+              value_template: >
+                {{ states('input_number.edifier_volume') | int == repeat.index }}
+            - condition: template
+              value_template: "{{ repeat.index <= 20 }}"
+          sequence:
+            - delay: 0.4
+            - service: script.turn_on
+              entity_id: script.edifier_volume_down_step
+  # На сколько пунктов прибавить громкость               
+  volume_up_input:
+    sequence:
+      - alias: volume_up_input
+        repeat:
+          until:
+            - condition: template
+              value_template: >
+                {{ states('input_number.edifier_volume') | int == repeat.index }}
+            - condition: template
+              value_template: "{{ repeat.index <= 20 }}"
+          sequence:
+            - delay: 0.4
+            - service: script.turn_on
+              entity_id: script.edifier_volume_up_step     
+
+ # Автоматизация по убавлению громкости на N пунктов              
+#  automation:
+#   - alias: Volume--
+#     trigger:
+#       platform: state
+#       entity_id: input_number.edifier_vol
+#     condition:
+#       condition: numeric_state
+#       entity_id: input_number.edifier_vol
+#       below: 0
+#     action:
+#       repeat:
+#           until:
+#             - condition: template
+#               value_template: >
+#                 {{ states('input_number.edifier_vol') | int == repeat.index }}
+#             - condition: template
+#               value_template: "{{ repeat.index <= 20 }}"
+#           sequence:
+#             - delay: 0.4
+#             - service: script.turn_on
+#               entity_id: script.edifier_volume_down_step
+#  # Автоматизация по прибавлению громкости на N пунктов  
+#   - alias: Volume++
+#     trigger:
+#       platform: state
+#       entity_id: input_number.edifier_vol
+#     condition:
+#       condition: numeric_state
+#       entity_id: input_number.edifier_vol
+#       above: 0
+#     action:
+#       repeat:
+#           until:
+#             - condition: template
+#               value_template: >
+#                 {{ states('input_number.edifier_volume') | int == repeat.index }}
+#             - condition: template
+#               value_template: "{{ repeat.index <= 20 }}"
+#           sequence:
+#             - delay: 0.4
+#             - service: script.turn_on
+#               entity_id: script.edifier_volume_up_step              
+ automation:
+  - alias: analog_audio
+    initial_state: 'true'
+    trigger:
+      platform: state
+      entity_id: switch.hisense_tv
+      to: 'off'
+      for: "00:00:05"
+    action:
+    - service: switch.turn_off
+      entity_id: switch.edifier_input  
+     
+          
+    
+  - alias: optic_audio
+    initial_state: 'true'
+    trigger:
+      platform: state
+      entity_id: switch.hisense_tv
+      to: 'on'
+    action:
+    - service: switch.turn_on
+      entity_id: switch.edifier_input 
+    - service: media_player.media_pause
+      entity_id: media_player.yandex_station
+

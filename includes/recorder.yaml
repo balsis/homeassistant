@@ -1,0 +1,51 @@
+
+  
+  purge_keep_days: 7
+  include:
+    entities:
+      - sensor.processor_use
+      - sensor.disk_use_percent
+      - sensor.memory_use_percent
+      - sensor.disk_free
+      - sensor.processor_temperature
+      - sensor.ble_impedance_miscale
+      - sensor.ble_non_stabilized_weight_miscale
+      - sensor.ble_stabilized_weight_miscale
+      - sensor.ble_weight_miscale
+      - sensor.impedance_artur
+      - sensor.weight_artur
+      - bodymiscale.artur
+      - sensor.impedance_maria
+      - sensor.weight_maria
+      - bodymiscale.maria    
+    domains:
+      - sensor
+      - switch
+      - shell_command
+      - binary_sensor
+      - input_text
+      - light
+      - script
+      - device_tracker
+      - media_player
+      - person
+  exclude:
+    entities:
+      - sensor.time
+    event_types:
+      - service_removed
+      - service_executed
+      - platform_discovered
+      - homeassistant_start
+      - homeassistant_stop
+      - feedreader
+      - service_registered
+      - call_service
+      - component_loaded
+      - logbook_entry
+      - system_log_event
+      - automation_triggered
+      - script_started
+      - timer_out_of_sync
+      
+

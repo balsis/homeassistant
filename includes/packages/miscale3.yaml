@@ -1,0 +1,55 @@
+miscale3:
+
+    template:
+      - sensor:
+    
+          - name: weight_artur
+            unit_of_measurement: 'kg'
+
+            state: >
+                {% set weight = states('sensor.ble_weight_miscale') | float %}
+                  {% if 70 <= weight <= 83 %}
+                    {{ states("sensor.ble_weight_miscale") }}
+                  {% else %}
+                    {{ states("sensor.weight_artur") }}
+                  {% endif %}
+            icon: mdi:weight-kilogram
+            
+          - name: weight_maria
+            unit_of_measurement: 'kg'
+            icon: mdi:weight-kilogram 
+            state: >-
+                {% set weight = states('sensor.ble_weight_miscale') | float %}
+                  {% if 48 <= weight <= 65 %}
+                    {{ states("sensor.ble_weight_miscale") }}
+                  {% else %}
+                    {{ states("sensor.weight_maria") }}
+                  {% endif %}
+             
+            
+          - name: impedance_artur
+            unit_of_measurement: 'ohm'
+            icon: mdi:omega 
+            state: >-
+                {% set weight = states('sensor.ble_weight_miscale') | float %}
+                  {% if 70 <= weight <= 83 %}
+                    {{ states("sensor.ble_impedance_miscale") }}
+                  {% else %}
+                    {{ states("sensor.impedance_artur") }}
+                  {% endif %}
+             
+          - name: impedance_maria
+            unit_of_measurement: 'ohm'
+            icon: mdi:omega 
+            state: >-
+                {% set weight = states('sensor.ble_weight_miscale') | float %}
+                  {% if 48 <= weight <= 65 %}
+                    {{ states("sensor.ble_impedance_miscale") }}
+                  {% else %}
+                    {{ states("sensor.impedance_maria") }}
+                  {% endif %}
+
+        
+            
+          
+       

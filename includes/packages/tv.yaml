@@ -1,0 +1,90 @@
+tv:
+ sensor:
+  - platform: mqtt
+    name: "TV - Source"
+    state_topic: "hisense/remoteapp/mobile/broadcast/ui_service/state"
+    value_template: "{{ value_json.name }}"
+
+  - platform: history_stats
+    name: Hisense ON today
+    entity_id: switch.hisense_tv
+    state: "on"
+    type: time
+    start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    end: "{{ now() }}"
+
+  - platform: template
+    sensors:
+     tv_on_time_today:
+        value_template:  "{% set hours = states('sensor.hisense_on_today') | float %} 
+        {% set minutes = ((hours % 1) * 60) | int %}  
+        {% set hours = (hours - (hours % 1)) | int %}  
+        {{ '%02ih %02im'%(hours, minutes) }}"
+ 
+
+ 
+ script: 
+    samsung_power:
+        alias: samsung_power
+        sequence:
+        - service: remote.send_command
+          entity_id: remote.yandex_station  # поменяйте на ваше устройство
+          data:
+            command: Включи # имя кнопки в интерфейсе
+            delay_secs: 0.4  # (опционально) пауза между повторами в секундах 
+ switch:
+  - platform: template
+    switches:
+      hisense_tv:
+        icon_template: >
+          {% if is_state('switch.hisense_tv','on') %}
+            {{ 'mdi:television-classic' }}
+          {% else %}
+            {{ 'mdi:television-classic-off' }}
+          {% endif %}
+        friendly_name: 'Hisense TV'
+        value_template: >
+          {{ is_state('device_tracker.qingdao_intelligent_precise_electronics_9e_5a_c2', 'home') }}
+        turn_on:
+          service: wake_on_lan.send_magic_packet
+          data:
+            mac: '30:32:35:9e:5a:c2'
+        turn_off:
+          service: media_player.turn_off
+          target:
+             entity_id: media_player.televizor        
+       
+        #   service: mqtt.publish
+        #   data:
+        #     topic: 'hisense/remoteapp/tv/remote_service/35:ed:c3:8e:c2:60$normal/actions/sendkey'
+        #     payload: 'KEY_POWER'
+   
+
+
+  - platform: template
+    switches:
+      samsung_tv:
+        friendly_name: "ТВ Samsung"
+        value_template: "{{ states('media_player.samsung_tv')}}"
+        turn_on:
+          service: script.turn_on
+          data:
+            entity_id: script.samsung_power
+        turn_off:
+          service: script.turn_on
+          data:
+            entity_id: script.samsung_power
+
+  - platform: template
+    switches:
+       playstation:
+        friendly_name: "Playstation 4"
+        value_template: "{{ states('media_player.playstation_4')}}"
+        turn_on:
+          service: media_player.turn_on
+          data:
+            entity_id: media_player.playstation_4
+        turn_off:
+          service: media_player.turn_off
+          data:
+            entity_id: media_player.playstation_4

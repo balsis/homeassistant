@@ -1,0 +1,58 @@
+climate:
+
+
+ homeassistant:
+  customize:
+    template:
+     
+      - sensor:
+
+          - name: da_thermostat_difference
+            state: "{{((states('sensor.a4c138354dbb_temperature') | float - state_attr('climate.room_thermostat', 'local_temperature') | float))|round(1) }}"
+            unit_of_measurement: °C
+            icon: mdi:temperature-celsius  
+ climate:
+  - platform: generic_thermostat
+    name: heater
+    heater: switch.towel_dryer
+    target_sensor: sensor.a4c138dd44bf_temperature
+    initial_hvac_mode: "off"
+    min_temp: 20
+    max_temp: 30
+
+
+#  script:
+    
+#   - room_temperature_calibration:
+#       alias: Калибровка термостата
+#       sequence:
+#           - service: mqtt.publish
+#             data_template:   
+#               topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
+#               payload_template: "0.0"
+#           - delay: 00:00:10
+#           - service: mqtt.publish
+#             data_template:
+#               topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
+#               payload_template: "{{((states('sensor.a4c138354dbb_temperature') | float - state_attr('climate.room_thermostat', 'local_temperature') | float))|round(1) }}"
+
+ automation:
+
+  - id: Калибровка термостата комнаты
+    alias: room_temperature_calibration
+    initial_state: true
+    trigger:
+      - platform: time_pattern
+        minutes: "/30"
+    action:
+    #  - service: script.turn_on
+    #   entity_id: script.room_temperature_calibration
+      - service: mqtt.publish
+        data_template:   
+          topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
+          payload_template: "0.0"
+      - delay: 00:00:10
+      - service: mqtt.publish
+        data_template:
+          topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
+          payload_template: "{{((states('sensor.a4c138354dbb_temperature') | float - state_attr('climate.room_thermostat', 'local_temperature') | float))|round(1) }}"
