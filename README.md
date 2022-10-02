@@ -3,7 +3,7 @@
 <details>
   <summary>Конфиг:</summary>
   
-**Железо**: Gigabyte Brix GB-BACE-3160 + Zigbee2MQTT (SONOFF Zigbee 3.0 USB Dongle)+ MQTT + Xiaomi Gateway 3;  
+**Железо**:   Gigabyte Brix GB-BACE-3160 + Zigbee2MQTT (SONOFF Zigbee 3.0 USB Dongle)+ MQTT + Xiaomi Gateway 3;  
 **Zigbee2MQTT**: 15 устройств (отопление, выключатели, теплый пол);  
 **Xiaomi Gateway 3**: 16 устройств (датчики Xiaomi);  
 **Passive BLE**: около 5 устройств;  
@@ -35,6 +35,11 @@ curl -sL https://raw.githubusercontent.com/home-assistant/supervised-installer/m
   <summary>Интерфейс, Portainer и Zigbee2MQTT:</summary>
   
 ![alt text](https://github.com/balsis/pics/blob/main/Home%20Assistant%20-%20GUI.gif)
+</details> 
+
+<details>  
+  <summary>Portainer и Zigbee2MQTT:</summary>
+  
 ![alt text](https://github.com/balsis/pics/blob/main/docker.PNG)  
 ![alt text](https://github.com/balsis/pics/blob/main/z2m.JPG) 
 
