@@ -1,8 +1,76 @@
 hall: 
 
+ homeassistant:
+  customize:
+    binary_sensor.582d3460b289_motion:
+      occupancy_timeout: [-5, 30, 60]
+
+ script:
+  alice_dialog2:
+    sequence:
+      - service: media_player.play_media
+        entity_id: media_player.yandex_station_lite
+        data:
+          media_content_id: тут кто-то тусит в темноте? 
+          media_content_type: dialog:умный дом:свет
+      - wait_for_trigger:
+          platform: event
+          event_type: yandex_intent
+          event_data:
+            session: { dialog: свет }
+        timeout:
+          seconds: 10
+      - choose:
+          - conditions: "{{ wait.trigger.event.data.text in ['да','конечно','тут'] }}"
+            sequence:
+              - event: yandex_intent_response
+                event_data:
+                  text: Включить вам свет?
+                  session: { dialog: свет2 }
+                  end_session: False
+              - wait_for_trigger:
+                  platform: event
+                  event_type: yandex_intent
+                  event_data:
+                    session: { dialog: свет2 }
+                timeout:
+                  seconds: 10
+              - choose:
+                  - conditions: "{{ wait.trigger.event.data.text in ['да','конечно','давай'] }}"
+                    sequence:
+                      - event: yandex_intent_response
+                        event_data:
+                          text: Запускаю. Кайзер просил передать привет Пукачевсу.
+                      - service: homeassistant.turn_on
+                        target:
+                          entity_id: switch.kitchen_backlight
+                default:
+                  - event: yandex_intent_response
+                    event_data:
+                      text: Ну нет, так нет
+        default:
+          - event: yandex_intent_response
+            event_data:
+              tts: <speaker effect="megaphone">ЭЙ!
+
  automation:
 
-  - alias: main_door_closed
+#   - alias: Включение света на кухне
+#     trigger:
+#       - platform: state
+#         entity_id:
+#           - binary_sensor.582d3460b289_motion
+#         to: "on"
+#     condition:
+#       - condition: numeric_state
+#         entity_id: sensor.582d3460b289_illuminance
+#         below: 10
+#     action:
+#       - service: script.alice_dialog2
+
+
+
+  - alias: Входная дверь закрыта
     id: main_door_closed
     initial_state: true
     trigger:

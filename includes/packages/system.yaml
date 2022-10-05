@@ -1,10 +1,6 @@
 system:
 
-
-
-
  sensor: 
-
     - platform: time_date
       display_options:
           - 'time'
@@ -27,7 +23,6 @@ system:
       unit_of_measurement: "°C"
       value_template: '{{ (value | multiply(0.001)) | round(1) }}'
    
-
     - platform: uptime
       name: online
 
@@ -37,6 +32,35 @@ system:
         - 'date'
         - 'date_time'
         - 'time_date'
+
+    - platform: command_line
+      name: Workday
+      command: >-
+       curl https://isdayoff.ru/{{ now().date().strftime("%Y%m%d") }}
+      scan_interval: 600
+
+
+    - platform: command_line
+      name: Workday Tomorrow
+      command: >-
+       curl https://isdayoff.ru/{{ (now().date() + timedelta(days=1)).strftime("%Y%m%d") }}
+      scan_interval: 600
+
+ 
+ template:
+    binary_sensor:
+      - name: Tod Day
+        unique_id: tod_day
+        state: >-
+          {%- if is_state('binary_sensor.workday_sensor','on')%}{{states('input_datetime.day_start_workday') <= states('sensor.time') < states('input_datetime.day_end') }}
+          {%- else %}{{states('input_datetime.day_start_holiday') <= states('sensor.time') < states('input_datetime.day_end') }}
+          {%- endif%}
+        icon: >
+          {% if is_state('binary_sensor.tod_day','on') %}
+          mdi:brightness-5
+          {% else %}
+          mdi:weather-night
+          {% endif %}
         
  automation:
     - alias: completed torrent

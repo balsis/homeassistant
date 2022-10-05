@@ -1,10 +1,5 @@
 tv:
  sensor:
-  - platform: mqtt
-    name: "TV - Source"
-    state_topic: "hisense/remoteapp/mobile/broadcast/ui_service/state"
-    value_template: "{{ value_json.name }}"
-
   - platform: history_stats
     name: Hisense ON today
     entity_id: switch.hisense_tv
@@ -20,8 +15,12 @@ tv:
         {% set minutes = ((hours % 1) * 60) | int %}  
         {% set hours = (hours - (hours % 1)) | int %}  
         {{ '%02ih %02im'%(hours, minutes) }}"
- 
 
+ mqtt:
+  sensor: 
+   - name: "TV - Source"
+     state_topic: "hisense/remoteapp/mobile/broadcast/ui_service/state"
+     value_template: "{{ value_json.name }}"
  
  script: 
     samsung_power:
@@ -67,13 +66,21 @@ tv:
         friendly_name: "ТВ Samsung"
         value_template: "{{ states('media_player.samsung_tv')}}"
         turn_on:
-          service: script.turn_on
-          data:
-            entity_id: script.samsung_power
+            service: media_player.turn_on
+            target:
+              entity_id: media_player.android_tv_192_168_1_65
         turn_off:
-          service: script.turn_on
-          data:
-            entity_id: script.samsung_power
+            service: media_player.turn_off
+            target:
+              entity_id: media_player.android_tv_192_168_1_65
+        # turn_on:
+        #   service: script.turn_on
+        #   data:
+        #     entity_id: script.samsung_power
+        # turn_off:
+        #   service: script.turn_on
+        #   data:
+        #     entity_id: script.samsung_power
 
   - platform: template
     switches:

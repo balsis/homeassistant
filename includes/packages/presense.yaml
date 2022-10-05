@@ -1,9 +1,5 @@
 presense:
 
- sensor:
-  - platform: yandex_transport
-    stop_id: stop__10074551
- 
  proximity: 
  
    artur_home: 

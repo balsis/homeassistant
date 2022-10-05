@@ -1,0 +1,10 @@
+bus: 
+ sensor:
+  - platform: rest
+    scan_interval: 60
+    name: bus_sensors
+    resource_template: https://spb-transport.gate.petersburg.ru/api/stop/16802
+    json_attributes_path: "$.result[:0].schedules[:1]"
+    headers:
+      Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiJ2a2lkMDAwMDAwMDAwIiwiZXhwIjoxNjc4Mjg5ODQwfQ.3iQt_xK9qQlKkN_viEN0Jic0fig35A7ySiV4VYjAo8c
+    value_template: "{{ value_json}}"

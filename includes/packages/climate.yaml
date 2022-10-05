@@ -1,16 +1,54 @@
 climate:
 
-
- homeassistant:
-  customize:
-    template:
-     
+ template:
       - sensor:
+          - name: current_weather
+            icon: mdi:temperature-celsius  
+            state: >-
+                {%- set state = states('sensor.yandex_weather_condition_homeassistant') -%}
+                {% if state == 'clear-night' %} Ясно
+                {% elif state == 'cloudy' %} Облачно
+                {% elif state == 'exceptional' %} Предупреждение
+                {% elif state == 'fog' %} Туман
+                {% elif state == 'light-rain' %} Небольшой дождь                
+                {% elif state == 'hail' %} Град
+                {% elif state == 'lightning' %} Молния
+                {% elif state == 'lightning-rainy' %} Молния, дождь
+                {% elif state == 'partlycloudy' %} Переменная облачность
+                {% elif state == 'pouring' %} Ливень
+                {% elif state == 'rainy' %} Дождь
+                {% elif state == 'snowy' %} Снег
+                {% elif state == 'snowy-rainy' %} Снег с дождем
+                {% elif state == 'sunny' %} Ясно
+                {% elif state == 'windy' %} Ветрено
+                {% elif state == 'windy-variant' %} Ветрено
+                {% else %} Нет данных
+                {% endif %}
 
-          - name: da_thermostat_difference
+          - name: da_thermostat_room_difference
             state: "{{((states('sensor.a4c138354dbb_temperature') | float - state_attr('climate.room_thermostat', 'local_temperature') | float))|round(1) }}"
             unit_of_measurement: °C
             icon: mdi:temperature-celsius  
+
+          - name: da_thermostat__kithen_difference
+            state: "{{((states('sensor.a4c138d4c674_temperature') | float - state_attr('climate.kitchen_thermostat', 'local_temperature') | float))|round(1) }}"
+            unit_of_measurement: °C
+            icon: mdi:temperature-celsius  
+    
+ switch: 
+  - platform: template
+    switches:
+      air_conditioner:
+        friendly_name: "Кондиционер"
+        value_template:  "{{ states('sensor.room_socket_current')|float(0) > 1 }}"
+        turn_on:
+            service: climate.turn_on
+            target:
+              entity_id: climate.konditsioner
+        turn_off:
+            service: climate.turn_off
+            target:
+              entity_id: climate.konditsioner
  climate:
   - platform: generic_thermostat
     name: heater
@@ -21,20 +59,34 @@ climate:
     max_temp: 30
 
 
-#  script:
-    
-#   - room_temperature_calibration:
-#       alias: Калибровка термостата
-#       sequence:
-#           - service: mqtt.publish
-#             data_template:   
-#               topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
-#               payload_template: "0.0"
-#           - delay: 00:00:10
-#           - service: mqtt.publish
-#             data_template:
-#               topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
-#               payload_template: "{{((states('sensor.a4c138354dbb_temperature') | float - state_attr('climate.room_thermostat', 'local_temperature') | float))|round(1) }}"
+
+
+ script:
+      room_temperature_calibration:
+          alias: Калибровка термостата в комнате
+          sequence:
+          - service: mqtt.publish
+            data_template:   
+              topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
+              payload_template: "0.0"
+          - delay: 00:00:10
+          - service: mqtt.publish
+            data_template:
+              topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
+              payload_template: "{{((states('sensor.a4c138354dbb_temperature') | float - state_attr('climate.room_thermostat', 'local_temperature') | float))|round(1) }}"
+
+      kitchen_temperature_calibration:
+          alias: Калибровка термостата на кухне
+          sequence:
+          - service: mqtt.publish
+            data_template:   
+              topic: zigbee2mqtt/kitchen_thermostat/set/local_temperature_calibration
+              payload_template: "0.0"
+          - delay: 00:00:10
+          - service: mqtt.publish
+            data_template:
+              topic: zigbee2mqtt/kitchen_thermostat/set/local_temperature_calibration
+              payload_template: "{{((states('sensor.a4c138d4c674_temperature') | float - state_attr('climate.kitchen_thermostat', 'local_temperature') | float))|round(1) }}"
 
  automation:
 
@@ -45,8 +97,6 @@ climate:
       - platform: time_pattern
         minutes: "/30"
     action:
-    #  - service: script.turn_on
-    #   entity_id: script.room_temperature_calibration
       - service: mqtt.publish
         data_template:   
           topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
@@ -56,3 +106,26 @@ climate:
         data_template:
           topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
           payload_template: "{{((states('sensor.a4c138354dbb_temperature') | float - state_attr('climate.room_thermostat', 'local_temperature') | float))|round(1) }}"
+
+  - id: Калибровка термостата кухни
+    alias: kitchen_temperature_calibration
+    initial_state: true
+    trigger:
+      - platform: time_pattern
+        minutes: "/30"
+    action:
+      - service: mqtt.publish
+        data_template:   
+          topic: zigbee2mqtt/kitchen_thermostat/set/local_temperature_calibration
+          payload_template: "0.0"
+      - delay: 00:00:10
+      - service: mqtt.publish
+        data_template:
+          topic: zigbee2mqtt/kitchen_thermostat/set/local_temperature_calibration
+          payload_template: "{{((states('sensor.a4c138d4c674_temperature') | float - state_attr('climate.kitchen_thermostat', 'local_temperature') | float))|round(1) }}"
+
+
+
+
+
+

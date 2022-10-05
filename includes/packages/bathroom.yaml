@@ -1,5 +1,8 @@
 bathroom: 
-
+    homeassistant:
+      customize:
+        binary_sensor.582d3460b367_motion:
+           occupancy_timeout: [-15, 60, 300]
     timer:
     
         vent_30:
@@ -32,7 +35,7 @@ bathroom:
         trigger:
     # Датчик движения
         - platform: state
-          entity_id: binary_sensor.0x00158d0003cc3e29_motion
+          entity_id: binary_sensor.582d3460b367_motion
         - platform: state
           entity_id: binary_sensor.0x00158d0003925e4d_contact         
           to: 'on'
@@ -47,7 +50,7 @@ bathroom:
                     entity_id: binary_sensor.0x00158d0003925e4d_contact
                     state: 'on'
                   - condition: state
-                    entity_id: binary_sensor.0x00158d0003cc3e29_motion
+                    entity_id: binary_sensor.582d3460b367_motion
                     state: 'off'                    
                   - condition: state
                     entity_id: switch.bathroom_switch_l1
@@ -59,7 +62,7 @@ bathroom:
 # движение есть
               - conditions:
                   - condition: state
-                    entity_id: binary_sensor.0x00158d0003cc3e29_motion
+                    entity_id: binary_sensor.582d3460b367_motion
                     state: 'on'
                   - condition: state
                     entity_id: switch.bathroom_switch_l1
@@ -85,20 +88,20 @@ bathroom:
         initial_state: true
         trigger:
       ## Влажность более 60 процентов
-        - platform: numeric_state
+        - platform: state
           entity_id: sensor.a4c138dd44bf_humidity
-          above: 60
+        #  above: 60
       ## кнопка
         # - platform: state
         #   entity_id: sensor.0x00158d000238a140_action
         #   to: 'single_right'
         condition:
-        # - condition: state
-        #   entity_id: switch.control_mode
-        #   state: 'on'  
-        - condition: state
-          entity_id: switch.toilet_switch_l1
-          state: 'off'
+         - condition: numeric_state
+           entity_id: sensor.a4c138dd44bf_humidity
+           above: '60'  
+         - condition: state
+           entity_id: switch.toilet_switch_l1
+           state: 'off'
         action:
         - service: switch.turn_on
           entity_id: switch.toilet_switch_l1

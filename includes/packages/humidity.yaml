@@ -1,13 +1,13 @@
 humidity:
-    binary_sensor:
-    
-    # Режим увлажнения  
-      - platform: mqtt
-        name: humidity_mode
-        state_topic: "humidity/mode"
-        payload_on: "ON"
-        payload_off: "OFF"
 
+    mqtt:
+       binary_sensor:
+          - state_topic: "humidity/mode"
+            name: humidity_mode
+            payload_on: "ON"
+            payload_off: "OFF"  
+
+    binary_sensor:
       - platform: template
         sensors:
         
@@ -22,8 +22,7 @@ humidity:
               {% else %}
               mdi:air-humidifier
               {% endif %}
-
-
+    
     switch:
     
       - platform: template
@@ -74,7 +73,7 @@ humidity:
               sequence:
               - type: turn_off
                 device_id: 566c339f3bfd572ca3e3e7d647e1f5e8
-                entity_id: humidifier.room_humidifier
+                entity_id: humidifier.zhimi_humidifier_ca1
                 domain: humidifier
             - conditions:
               - condition: state
@@ -83,7 +82,7 @@ humidity:
               sequence:
               - type: turn_on
                 device_id: 566c339f3bfd572ca3e3e7d647e1f5e8
-                entity_id: humidifier.room_humidifier
+                entity_id: humidifier.zhimi_humidifier_ca1
                 domain: humidifier
             
             
