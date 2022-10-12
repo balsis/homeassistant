@@ -13,11 +13,31 @@ bathroom:
           duration: '00:60:00'
 
     template:
-      - binary_sensor:
+    
 
+      - trigger:
+          - platform: state
+            entity_id:
+              - binary_sensor.0x00158d0003925e4d_contact
+            from: "on"
+            to: "off"
+          - platform: state
+            entity_id:
+              - binary_sensor.582d3460b367_motion
+              - binary_sensor.0x00158d0003925e4d_contact
+            to: "on"
+        binary_sensor:
+          - name: bathroom_occupancy
+            unique_id: occupancy_bath
+            state: "{{ true }}"
+            device_class: occupancy
+            auto_off:
+              minutes: 2
+
+      - binary_sensor:
           - name: bathroom_light
             state: >
-              {{ is_state('binary_sensor.0x00158d0003cc3e29_motion', 'off')  
+              {{ is_state('binary_sensor.582d3460b367_motion', 'off')  
                  and is_state('switch.bathroom_switch_l1', 'on')
               }}
             delay_on: 00:03:00
@@ -228,7 +248,27 @@ bathroom:
         - service: light.turn_off
           entity_id: light.mi_control_hub_light
         initial_state: true
-    
+
+      - id: '1664735246728'
+        alias: Включение подсветки душа
+        description: ''
+        trigger:
+          - platform: state
+            entity_id:
+            - sensor.582d3460b367_illuminance
+        condition:
+          - condition: numeric_state
+            entity_id: sensor.582d3460b367_illuminance
+            below: 60
+          - condition: state
+            entity_id: switch.bathroom_switch_l1
+            state: 'on'
+        action:
+          - service: switch.turn_on
+            data: {}
+            target:
+              entity_id: switch.bathroom_switch_l2
+        mode: single
 
         
                

@@ -1,5 +1,28 @@
 climate:
 
+ binary_sensor:
+  - platform: template
+    sensors:
+    
+      humidity:
+        friendly_name: "Увлажнение"
+        value_template: >-
+          {{ is_state('binary_sensor.0x00158d00029b0fd5_contact', 'off')  
+             and is_state('binary_sensor.humidity_mode', 'on')}}
+        icon_template: >-
+          {% if is_state("binary_sensor.humidity", "on") %}
+          mdi:water-percent
+          {% else %}
+          mdi:air-humidifier
+          {% endif %}
+
+ mqtt:
+       binary_sensor:
+          - state_topic: "humidity/mode"
+            name: humidity_mode
+            payload_on: "ON"
+            payload_off: "OFF"  
+
  template:
       - sensor:
           - name: current_weather
@@ -36,19 +59,32 @@ climate:
             icon: mdi:temperature-celsius  
     
  switch: 
-  - platform: template
-    switches:
-      air_conditioner:
-        friendly_name: "Кондиционер"
-        value_template:  "{{ states('sensor.room_socket_current')|float(0) > 1 }}"
-        turn_on:
-            service: climate.turn_on
-            target:
-              entity_id: climate.konditsioner
-        turn_off:
-            service: climate.turn_off
-            target:
-              entity_id: climate.konditsioner
+
+      - platform: template
+        switches:
+          humidity_mode:
+            friendly_name: "Режим увлажнения воздуха"
+            value_template: "{{  is_state('binary_sensor.humidity_mode', 'on') }}"
+            turn_on:
+              service: mqtt.publish
+              data_template:
+                topic: "humidity/mode"
+                payload_template: 'ON'
+                retain: true 
+            turn_off:
+              service: mqtt.publish
+              data_template:
+                topic: "humidity/mode"
+                payload_template: 'OFF'
+                retain: true 
+            icon_template: >-
+              {% if is_state("switch.humidity_mode", "on") %}
+              mdi:air-humidifier
+              {% else %}
+              mdi:air-humidifier-off
+              {% endif %}
+                            
+              
  climate:
   - platform: generic_thermostat
     name: heater
@@ -90,39 +126,75 @@ climate:
 
  automation:
 
-  - id: Калибровка термостата комнаты
-    alias: room_temperature_calibration
-    initial_state: true
-    trigger:
-      - platform: time_pattern
-        minutes: "/30"
-    action:
-      - service: mqtt.publish
-        data_template:   
-          topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
-          payload_template: "0.0"
-      - delay: 00:00:10
-      - service: mqtt.publish
-        data_template:
-          topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
-          payload_template: "{{((states('sensor.a4c138354dbb_temperature') | float - state_attr('climate.room_thermostat', 'local_temperature') | float))|round(1) }}"
 
-  - id: Калибровка термостата кухни
-    alias: kitchen_temperature_calibration
-    initial_state: true
-    trigger:
-      - platform: time_pattern
-        minutes: "/30"
-    action:
-      - service: mqtt.publish
-        data_template:   
-          topic: zigbee2mqtt/kitchen_thermostat/set/local_temperature_calibration
-          payload_template: "0.0"
-      - delay: 00:00:10
-      - service: mqtt.publish
-        data_template:
-          topic: zigbee2mqtt/kitchen_thermostat/set/local_temperature_calibration
-          payload_template: "{{((states('sensor.a4c138d4c674_temperature') | float - state_attr('climate.kitchen_thermostat', 'local_temperature') | float))|round(1) }}"
+      - id: '1652642961682'
+        alias: humidify_on_off
+        trigger:
+        - platform: homeassistant
+          event: start
+        - platform: state
+          entity_id:
+          - sensor.a4c138354dbb_humidity
+        - platform: state
+          entity_id:
+          - binary_sensor.0x00158d00029b0fd5_contact
+        - platform: time_pattern
+          minutes: '10'
+        action:
+        - choose:
+          - conditions:
+            - condition: state
+              entity_id: binary_sensor.humidity
+              state: 'off'
+            sequence:
+            - type: turn_off
+              device_id: 566c339f3bfd572ca3e3e7d647e1f5e8
+              entity_id: humidifier.zhimi_humidifier_ca1
+              domain: humidifier
+          - conditions:
+            - condition: state
+              entity_id: binary_sensor.humidity
+              state: 'on'
+            sequence:
+            - type: turn_on
+              device_id: 566c339f3bfd572ca3e3e7d647e1f5e8
+              entity_id: humidifier.zhimi_humidifier_ca1
+              domain: humidifier
+
+
+      - id: Калибровка термостата комнаты
+        alias: room_temperature_calibration
+        initial_state: true
+        trigger:
+          - platform: time_pattern
+            minutes: "/30"
+        action:
+          - service: mqtt.publish
+            data_template:   
+              topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
+              payload_template: "0.0"
+          - delay: 00:00:10
+          - service: mqtt.publish
+            data_template:
+              topic: zigbee2mqtt/room_thermostat/set/local_temperature_calibration
+              payload_template: "{{((states('sensor.a4c138354dbb_temperature') | float - state_attr('climate.room_thermostat', 'local_temperature') | float))|round(1) }}"
+    
+      - id: Калибровка термостата кухни
+        alias: kitchen_temperature_calibration
+        initial_state: true
+        trigger:
+          - platform: time_pattern
+            minutes: "/30"
+        action:
+          - service: mqtt.publish
+            data_template:   
+              topic: zigbee2mqtt/kitchen_thermostat/set/local_temperature_calibration
+              payload_template: "0.0"
+          - delay: 00:00:10
+          - service: mqtt.publish
+            data_template:
+              topic: zigbee2mqtt/kitchen_thermostat/set/local_temperature_calibration
+              payload_template: "{{((states('sensor.a4c138d4c674_temperature') | float - state_attr('climate.kitchen_thermostat', 'local_temperature') | float))|round(1) }}"
 
 
 

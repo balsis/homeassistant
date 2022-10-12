@@ -1,4 +1,5 @@
 tv:
+
  sensor:
   - platform: history_stats
     name: Hisense ON today
@@ -8,6 +9,7 @@ tv:
     start: "{{ now().replace(hour=0, minute=0, second=0) }}"
     end: "{{ now() }}"
 
+
   - platform: template
     sensors:
      tv_on_time_today:
@@ -16,6 +18,8 @@ tv:
         {% set hours = (hours - (hours % 1)) | int %}  
         {{ '%02ih %02im'%(hours, minutes) }}"
 
+     alice_state:
+        value_template: "{{ state_attr('media_player.yandex_station', 'alice_state') }}"
  mqtt:
   sensor: 
    - name: "TV - Source"

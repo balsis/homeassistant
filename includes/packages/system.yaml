@@ -23,9 +23,6 @@ system:
       unit_of_measurement: "°C"
       value_template: '{{ (value | multiply(0.001)) | round(1) }}'
    
-    - platform: uptime
-      name: online
-
     - platform: time_date
       display_options:
         - 'time'

@@ -1,0 +1,197 @@
+kitchen_and_hall: 
+
+ homeassistant:
+  customize:
+    binary_sensor.582d3460b289_motion:
+      occupancy_timeout: [-5, 30, 60]
+
+ script:
+  alice_dialog2:
+    sequence:
+      - service: media_player.play_media
+        entity_id: media_player.yandex_station_lite
+        data:
+          media_content_id: тут кто-то тусит в темноте? 
+          media_content_type: dialog:умный дом:свет
+      - wait_for_trigger:
+          platform: event
+          event_type: yandex_intent
+          event_data:
+            session: { dialog: свет }
+        timeout:
+          seconds: 10
+      - choose:
+          - conditions: "{{ wait.trigger.event.data.text in ['да','конечно','тут'] }}"
+            sequence:
+              - event: yandex_intent_response
+                event_data:
+                  text: Включить вам свет?
+                  session: { dialog: свет2 }
+                  end_session: False
+              - wait_for_trigger:
+                  platform: event
+                  event_type: yandex_intent
+                  event_data:
+                    session: { dialog: свет2 }
+                timeout:
+                  seconds: 10
+              - choose:
+                  - conditions: "{{ wait.trigger.event.data.text in ['да','конечно','давай'] }}"
+                    sequence:
+                      - event: yandex_intent_response
+                        event_data:
+                          text: Запускаю. Кайзер просил передать привет Пукачевсу.
+                      - service: homeassistant.turn_on
+                        target:
+                          entity_id: switch.kitchen_backlight
+                default:
+                  - event: yandex_intent_response
+                    event_data:
+                      text: Ну нет, так нет
+        default:
+          - event: yandex_intent_response
+            event_data:
+              tts: <speaker effect="megaphone">ЭЙ!
+
+ automation:
+
+    - id: '1660727755634'
+      alias: Photo after opening door
+      description: ''
+      trigger:
+      - platform: state
+        entity_id:
+        - binary_sensor.0x00158d00072b958d_contact
+      action:
+      - service: camera.snapshot
+        data:
+          filename: /config/www/cam_captures/1.jpg
+        target:
+          entity_id: camera.tapo_camera_hd
+      - service: telegram_bot.send_photo
+        data:
+          file: /config/www/cam_captures/1.jpg
+          target: -1001339012194
+          parse_mode: html
+          caption: Фото с камеры
+    - id: '1661274593900'
+      alias: lighting_for_plants_on
+      description: ''
+      trigger:
+      - platform: sun
+        event: sunset
+        offset: 0
+      condition:
+      - condition: state
+        entity_id: binary_sensor.people_home
+        state: 'on'
+      action:
+      - type: turn_on
+        device_id: 348969e59c8f8b7e5475a47111e18238
+        entity_id: switch.lighting_for_plants
+        domain: switch
+      mode: single
+    - id: '1661274654484'
+      alias: lighting_for_plants_off
+      description: ''
+      trigger:
+      - platform: time
+        at: '23:00:00'
+      condition:
+      - condition: device
+        type: is_on
+        device_id: 348969e59c8f8b7e5475a47111e18238
+        entity_id: switch.lighting_for_plants
+        domain: switch
+      action:
+      - type: turn_off
+        device_id: 348969e59c8f8b7e5475a47111e18238
+        entity_id: switch.lighting_for_plants
+        domain: switch
+      mode: single
+
+    - id: '1664640431625'
+      alias: Включение подсветки WLED
+      description: ''
+      trigger:
+      - platform: state
+        entity_id:
+        - sensor.ble_remote_yeelight_remote
+        to: single press on
+      action:
+      - service: light.turn_on
+        data:
+          transition: 5
+          color_temp: 153
+          brightness_pct: 50
+        target:
+          entity_id: light.wled
+      mode: single
+    - id: '1664640619495'
+      alias: Выключение подсветки WLED
+      description: ''
+      trigger:
+      - platform: state
+        entity_id:
+        - sensor.ble_remote_yeelight_remote
+        to: single press off
+      condition:
+      - condition: numeric_state
+        entity_id: sensor.582d3460b289_illuminance
+        below: 10
+      action:
+      - service: light.turn_off
+        data:
+          transition: 10
+        target:
+          entity_id: light.wled
+      mode: single
+  
+    - id: '1664736740611'
+      alias: Включение WLED Авто
+      description: ''
+      trigger:
+      - platform: state
+        entity_id:
+        - binary_sensor.582d3460b289_motion
+        to: 'on'
+      condition: []
+      action:
+      - service: light.turn_on
+        data: {}
+        target:
+          entity_id: light.wled
+      mode: single
+    - id: '1664736966195'
+      alias: Выключение WLED Авто
+      description: ''
+      trigger:
+      - platform: state
+        entity_id:
+        - binary_sensor.582d3460b289_motion
+        to: 'off'
+        for:
+          hours: 0
+          minutes: 3
+          seconds: 0
+      condition: []
+      action:
+      - service: light.turn_off
+        data: {}
+        target:
+          entity_id: light.wled
+      mode: single
+  
+    - alias: Входная дверь закрыта
+      id: main_door_closed
+      initial_state: true
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.0x00158d00072b958d_contact
+          from: 'on'
+          to: 'off'
+      action:          
+       - service: notify.telegram_artur
+         data:
+             message: | 
+                 🚪 Входная дверь закрыта  {{as_timestamp(now()) | timestamp_custom('%H:%M:%S',true,0) }}.
