@@ -32,7 +32,7 @@ curl -sL https://raw.githubusercontent.com/home-assistant/supervised-installer/m
 </details> 
 
 <details>
-  <summary>Интерфейс, Portainer и Zigbee2MQTT:</summary>
+  <summary>Интерфейс:</summary>
   
 ![alt text](https://github.com/balsis/pics/blob/main/Home%20Assistant%20-%20GUI.gif)
 </details> 
