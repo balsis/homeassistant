@@ -45,6 +45,34 @@ curl -sL https://raw.githubusercontent.com/home-assistant/supervised-installer/m
 
 </details> 
  
+<details>  
+  <summary> Удаление и переустановка контейнеров hassio:</summary> 
+
+
+Остановка сервисов
+```
+sudo systemctl stop hassio-supervisor.service
+sudo systemctl stop hassio-apparmor.service
+```
+Отключение сервисов
+```
+sudo systemctl disable hassio-supervisor.service
+sudo systemctl disable hassio-apparmor.service
+```
+
+Удаление сервисов
+```
+sudo rm -rf /etc/systemd/system/hassio-supervisor.service
+sudo rm -rf /etc/systemd/system/hassio-apparmor.service
+```
+Удаление всех файлов и папок
+```
+sudo rm -rf /usr/sbin/hassio-supervisor
+sudo rm -rf /usr/sbin/hassio-apparmor
+sudo rm -rf /usr/share/hassio/
+```
+</details> 
+ 
 Шпаргалки:  
 [Настройка NUT для IPPON 650 UPS с USB в Debian 10](https://github.com/balsis/homeassistant/blob/main/nut.md)
 
